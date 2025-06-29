@@ -3,7 +3,7 @@ title: 합성곱 신경망(CNN)
 tags:
   - deep_learning
 date created: 화요일, 2월 8일 2022, 10:49:06 오후
-date modified: 일요일, 6월 29일 2025, 12:31:28 오전
+date modified: 일요일, 6월 29일 2025, 10:03:09 오후
 ---
 
 # 들어가며
