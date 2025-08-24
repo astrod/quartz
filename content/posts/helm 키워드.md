@@ -1,9 +1,11 @@
 ---
 date created: 화요일, 2월 15일 2022, 4:33:45 오후
-date modified: 일요일, 3월 3일 2024, 9:35:14 오후
+date modified: 일요일, 8월 24일 2025, 6:13:20 오후
 title: helm 키워드
 tags:
   - kubernetes
+date:
+  - 2024-03-03
 ---
 # Helm
 - The package manager for Kubernetes
