@@ -1,0 +1,263 @@
+---
+layout: "post"
+title: "[Head First] 데코레이터 디자인 패턴"
+tags:
+  - design_pattern
+  - book
+  - java
+category:
+  - design_pattern
+date:
+  - 2016-03-13
+---
+
+# 들어가며
+
+이 글에 나오는 내용은 3장, 데코레이터 패턴에 대해서 정리한 글입니다.
+
+# 스타버즈에 오신 것을 환영합니다.
+
+스타버즈는 급속도로 성장하는 초대형 커피 전문점으로 유명하다. 스타버즈가 워낙 빠르게 성장했기 때문에, 다양한 음료들을 모두 포괄하는 주문 시스템을 이제서야 겨우 갖추려고 하는 중이다. 사업을 시작할 무렵 만들어진 클래스들은 다음과 같다.
+
+```java
+abstract class Beverage {
+	protected String description; // 음료에 대한 설명이 들어간다.
+
+	// 음료에 대한 설명을 리턴한다.
+	public String getDescription() {
+		return this.description;
+	}
+
+	public abstract int cost();
+}
+```
+
+각각의 음료들은 위의 추상 클래스를 구현하게 된다.
+
+```java
+class Decaf extends Beverage {
+
+    public Decaf(String desc) {
+        this.description = desc;
+    }
+
+    @Override
+    public int cost() {
+        return 20; // 음료의 가격을 구현한다.
+    }
+}
+```
+
+커피를 주문할 때는 스팀 우유나 두유, 모카를 추가하고 휘핑 크림을 얹기도 한다. 그러면 각기 음료들이 다른 서브클래스로 구현되어야 한다.
+
+- 커피
+- 커피 + 우유
+- 커피 + 두유
+- 커피 + 모카
+- 커피 + 우유 + 휘핑크림
+
+이와 같이 새로운 음료들이 추가될때마다 새로운 클래스가 추가되어야 하는 문제가 발생했다.
+
+## 상속으로 한번 해 볼까?
+
+도저히 이런 방식으로는 구현이 어려워져서, 상속을 사용하기로 했다.
+
+```java
+class Beverage {
+	private String description;
+	private boolean milk;
+	private boolean soy;
+	private boolean mocha;
+	private boolean whip;
+
+	// 음료에 대한 설명을 리턴한다.
+	public String getDiscription() {
+		return description;
+	}
+
+	public int cost() {
+		// 각각의 음료에 대한 값을 구현한다.
+	};
+
+	// 기타 set, hasSoy(), hasMocha() ...
+
+}
+```
+
+언듯 보면 괜찮아 보인다. 그러나…
+
+- 첨가물 가격이 바뀔 때마다 기존 코드를 수정해야 하고
+- 첨가물의 종류가 많아지면 메소드를 수정하고 cost 메서드를 수정해야 한다.
+- 손님이 더블 모카를 주문한다면?
+- 만약에 더 이상 모카를 사용하면 안 되는 음료가 생긴다면? 아이스 티 같은 경우에도 hasMocha() 메서드를 상속받아야 한다.
+
+## OCP(Open-Closed Principle)
+
+위와 같은 문제는 OCP 를 제대로 지키지 못해서 발생하였다.
+OCP 는 가장 중요한 디자인 원칙 중 하나이다.
+
+> 클래스는 확장에 대해 열려(Open) 있어야 하며, 코드 변경에 대해서는 닫혀(Close) 있어야 한다.
+
+즉, 기존 코드를 건드리지 않은 상태로 확장을 통해서 새로운 행동을 간단하게 추가할 수 있어야 한다. 위의 문장이 이상하게 보일 수 있다. 코드를 고치지 않으면서 기능을 추가한다니?
+
+옵저버 패턴을 보자. 옵저버를 추가하면 Subject 코드를 변경하지 않고도 기능을 확장할 수 있다.
+
+## 데코레이터 패턴
+
+상속을 사용하여 cost 를 계산하는건 결국 좋은 패턴이 되지 못했다.
+
+대신에 사용할 방법은 다음과 같다 : 우선 특정 음료에서 시작하여, 첨가물로 그 음료를 장식(decorate)할 것이다. 만약 어떤 손님이 모카 + 휘핑크림 + 다크 로스트 커피를 주문한다면
+
+- DarkRoast 객체를 가져온다
+- Mocha 객체로 장식한다
+- Whip 객체로 장식한다
+- cost() 메소드를 호출한다. 이 때 값을 계산하는 것은 해당 객체들에게 위임한다.
+
+실제적인 구현 방법은 다음과 같다.
+
+- 데코레이터의 슈퍼클래스는 자신이 장식하고 있는 객체의 슈퍼클래스와 같다.
+- 한 객체를 여러 개의 데코레이터로 감쌀 수 있다.
+- 데코레이터는 자신이 감싸고 있는 객체와 같은 슈퍼클래스를 가지고 있기 때문에, 원 객체 자리에 들어가도 문제가 없다.
+- **데코레이터는 자신이 장식하고 있는 객체에게 어떤 행동을 위임하는 것 외에 원하는 추가적인 작업을 수행할 수 있다.**
+- 객체는 언제든지 감쌀 수 있기 때문에,실행중에 필요한 데코레이터를 마음대로 적용할 수 있다.
+
+## 실제 클래스
+
+데코레이터 패턴은 다음과 같은 식으로 정의된다.
+
+> 데코레이터 패턴에서는 객체에 추가적인 요건을 동적으로 첨가한다. 데코레이터는 서브클래스를 만드는 것을 통해서 기능을 유연하게 확장할 수 있는 방법을 제공한다.
+
+데코레이터 패턴의 핵심은 데코레이터의 형식이 그 데코레이터로 감싸는 객체의 형식과 같다는 것이다. 그렇기 때문에, 같은 객체를 상속하여 타입을 맞추게 된다.
+
+위의 정의만으로 어떻게 활용할지 확인하기는 어려우니, 실제 사용 예제를 보자. 실제 코드는 다음과 같다.
+
+```java
+public abstract class Beverage {
+	String description = "제목 없음";
+
+	public String getDescription() {
+		return description;
+	}
+
+	public abstract double cost();
+}
+```
+
+이제 첨가물(condiment) 을 나타내는 추상 클래스를 구현해야 한다. 실제 객체와 데코레이터 객체는 같은 타입을 구현해야 하니, Beverage 클래스를 상속한다.
+
+```java
+// Beverage 객체가 들어갈 자리에 들어갈 수 있어야 하므로 Beverage 객체를 확장한다.
+public abstract class CondimentDecorator extends Beverage {
+	// 모든 첨가믈 데코레이터에서 getDescription 을 구현하도록 만들 계획이다.
+	public abstract String getDescription();
+}
+```
+
+이제 위의 추상 클래스를 사용하여 실제 음료를 구현한다.
+
+```java
+public class Espresso extends Beverage {
+	public Espresso() {
+		description = "에스프레소";
+	}
+
+	public double cost() {
+		return 1.99;
+	}
+}
+
+public class HouseBlend extends Beverage {
+	public HouseBlend() {
+		description = "하우스 블랜드 커피";
+	}
+
+	public double cost() {
+		return .89;
+	}
+}
+```
+
+이후는 첨가물을 더하는 데코레이터 코드이다. 데코레이터는 CondimentDecorator 클래스를 상속한다.
+
+```java
+public class Mocha extends CondimentDecorator {
+	Beverage beverage;
+
+	// 생성할 때 음료를 래핑하게 한다.
+	public Mocha(Beverage beverage) {
+		this.beverage = beverage;
+	}
+
+	// 음료의 설명에 모카 첨가물 설명을 추가한다.
+	public String getDescription() {
+		this.beverage.getDescription() + ", 모카";
+	}
+
+	// 음료의 가격에 첨가물의 가격을 더한다.
+	public double cost() {
+		return .20 + beverage.cost();
+	}
+}
+```
+
+이와 같은 설계의 또 다른 장점은 여러 가지 첨가물을 제한없이 더할 수 있다는 것이다. 예를 들면
+
+```java
+@Test
+public void testDecorator() {
+	Beverage beverage = new DarkRoast();
+	Beverage mocha = new Mocha(beverage);
+	Beverage mochaWithWhip = new Whip(beverage);
+}
+```
+
+데코레이터 클래스도 Beverage 클래스를 상속하였기 때문에, 위와 같이 결과 클래스를 계속 래핑하여 새로운 첨가물을 더할 수 있다.
+
+## 또 다른 데코레이터
+
+java.io 패키지에는 많은 클래스가 있다. 이 패키지의 많은 부분이 데코레이터 패턴을 기반으로 만들어졌다. 예를 들면, 파일에서 데이터를 읽어오는 클래스들이 있다.
+
+이제 파일에서 데이터를 읽어오는 클래스에 새로운 데코레이터를 추가해 볼 것이다. 이 데코레이터는 입력 스트림에 있는 대문자를 전부 소문자로 바꿔주는 역할을 한다.
+
+```java
+
+// 추상 데코레이터를 확장하여 새 클래스를 생성한다.
+public class LoverCaseInputStream extends FilterInputStream {
+
+    // 데코레이팅 할 객체인 InputStream 을 파라미터로 받는다.
+	public LoverCaseInputStream(InputStream in) {
+		super(in);
+	}
+
+	// 바이트 값 하나를 읽어 대문자이면 소문자로 변환한다.
+	public int read() throws IOException {
+		int c = super.read();
+		return (c == -1 ? c : Character.toLowerCase((char)c));
+	}
+
+	// 바이트 배열을 읽고, 대문자이면 소문자로 변환한다.
+	public int read(byte[] b, int offset, int len) throws IOException {
+		int result = super.read(b, offset, len);
+		for (int i = offset; i <offset+result; i++) {
+			b[i] = (byte)Character.toLowerCase((char)b[i]);
+		}
+		return result;
+	}
+}
+```
+
+## 데코레이터 패턴 : 단점
+
+### 자잘한 클래스들이 계속 추가된다
+
+자바를 생각해 보자. 자바 I/O 라이브러리에는 어디 사용하는지 알기 어려운 데코레이터 클래스들이 있다. 자바 I/O 가 데코레이터 패턴을 구현한다는 걸 모르면 처음엔 당황하기 쉽다.
+
+### 특정 형식에 의존하는 코드에 데코레이터를 적용한다
+
+데코레이터를 적용하면, 사용측에서는 데코레이터가 적용됬는지 몰라도 사용할 수 있다.
+
+그러나 특정 형식에 의존하는 코드에서 데코레이터 패턴을 사용하면 모든 게 엉망이 된다. 데코레이터 패턴을 적용하면 어떤 형식을 사용하는지 감추기 때문이다.
+
+### 구성요소를 초기화하는 데 필요한 코드가 복잡하다
+
+구성 요소를 많은 데코레이터로 감싸야 하기 때문에, 코드가 길고 복잡해진다. 이는 펙토리 / 빌더 패턴을 사용하여 어느정도 극복할 수 있다.
