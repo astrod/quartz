@@ -1,8 +1,11 @@
 ---
+layout: post
 title: Phantom Read와 MVCC를 실무적으로 이해하기
 tags:
   - db
   - transaction
+category:
+  - db
 date:
   - 2026-02-14
 ---
@@ -10,6 +13,7 @@ date:
 # Phantom Read와 MVCC를 실무적으로 이해하기
 
 ## Phantom Read 상황 재현
+
 - 트랜잭션 1이 실행 중이다.
 - 먼저 아래 쿼리를 실행한다.
 
@@ -42,12 +46,12 @@ SELECT * FROM orders WHERE price >= 100;
 
 ## 트랜잭션 격리 수준
 
-| 격리 수준 | Dirty Read | Non-Repeatable Read | Phantom Read |
-| --- | --- | --- | --- |
-| READ_UNCOMMITTED | O | O | O |
-| READ_COMMITTED | X | O | O |
-| REPEATABLE_READ | X | X | O |
-| SERIALIZABLE | X | X | X |
+| 격리 수준        | Dirty Read | Non-Repeatable Read | Phantom Read |
+| ---------------- | ---------- | ------------------- | ------------ |
+| READ_UNCOMMITTED | O          | O                   | O            |
+| READ_COMMITTED   | X          | O                   | O            |
+| REPEATABLE_READ  | X          | X                   | O            |
+| SERIALIZABLE     | X          | X                   | X            |
 
 ## 대안
 
